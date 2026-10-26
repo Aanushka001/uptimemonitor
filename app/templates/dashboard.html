@@ -6,82 +6,181 @@
   <meta http-equiv="refresh" content="30">
   <title>Vigil status</title>
   <style>
-    :root { --bg:#f7f7f5; --card:#fff; --text:#1f2933; --muted:#667085; --line:#e4e7ec;
-            --up:#1a7f4b; --down:#b42318; --pending:#8a6d00; --paused:#667085; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#16181d; --card:#1f232a; --text:#e8eaed; --muted:#9aa3af; --line:#2f353f;
-              --up:#4cc38a; --down:#f97066; --pending:#e5c158; --paused:#9aa3af; }
+    :root {
+      --bg:#f4f5f7; --card:#ffffff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
+      --up:#15803d; --up-bg:#dcfce7; --down:#b91c1c; --down-bg:#fee2e2;
+      --pending:#a16207; --pending-bg:#fef3c7; --paused:#4b5563; --paused-bg:#f3f4f6;
+      --accent:#2563eb; --shadow:0 1px 2px rgba(16,24,40,.06);
     }
-    body { margin:0; padding:24px; background:var(--bg); color:var(--text);
-           font:15px/1.5 system-ui, sans-serif; }
-    main { max-width:960px; margin:0 auto; }
-    h1 { font-size:22px; margin:0 0 4px; }
-    .sub { color:var(--muted); margin:0 0 20px; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
-            padding:16px; margin-bottom:20px; overflow-x:auto; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0f1115; --card:#181b21; --text:#e8eaed; --muted:#9aa3af; --line:#2a2f38;
+        --up:#4ade80; --up-bg:#12301f; --down:#f87171; --down-bg:#3a1618;
+        --pending:#facc15; --pending-bg:#33290c; --paused:#9ca3af; --paused-bg:#22262d;
+        --accent:#60a5fa; --shadow:none;
+      }
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:24px 16px 48px; background:var(--bg); color:var(--text);
+           font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width:1040px; margin:0 auto; }
+    header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:16px; }
+    h1 { font-size:24px; margin:0; letter-spacing:-.01em; }
+    h2 { font-size:15px; margin:28px 0 10px; }
+    .sub { color:var(--muted); margin:0; font-size:13px; }
+    .banner { display:flex; align-items:center; gap:12px; padding:16px 18px; border-radius:12px;
+              border:1px solid var(--line); box-shadow:var(--shadow); font-weight:600; }
+    .banner .dot { width:12px; height:12px; border-radius:50%; flex:none; }
+    .banner.ok { background:var(--up-bg); color:var(--up); border-color:transparent; }
+    .banner.ok .dot { background:var(--up); }
+    .banner.bad { background:var(--down-bg); color:var(--down); border-color:transparent; }
+    .banner.bad .dot { background:var(--down); }
+    .banner.idle { background:var(--card); color:var(--muted); }
+    .banner.idle .dot { background:var(--muted); }
+    .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-top:12px; }
+    .tile { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); }
+    .tile .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .tile .value { font-size:26px; font-weight:650; margin-top:2px; }
+    .tile .value.up { color:var(--up); }
+    .tile .value.down { color:var(--down); }
+    nav { display:inline-flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:999px; }
+    nav a { color:var(--muted); text-decoration:none; padding:4px 14px; border-radius:999px; font-size:13px; }
+    nav a.active { background:var(--accent); color:#fff; font-weight:600; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; }
+    .card.incident { border-left:4px solid var(--down); }
+    .empty { padding:18px; color:var(--muted); }
     table { width:100%; border-collapse:collapse; }
-    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
-    th { color:var(--muted); font-weight:500; font-size:13px; }
-    tr:last-child td { border-bottom:none; }
-    .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px;
-             font-weight:500; border:1px solid currentColor; }
-    .up { color:var(--up); } .down { color:var(--down); }
-    .pending { color:var(--pending); } .paused { color:var(--paused); }
-    .url { color:var(--muted); font-size:13px; }
-    nav a { color:var(--muted); margin-right:12px; text-decoration:none; }
-    nav a.active { color:var(--text); font-weight:500; }
+    th, td { text-align:left; padding:12px 16px; border-bottom:1px solid var(--line); vertical-align:middle; }
+    th { color:var(--muted); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:.04em; background:transparent; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover { background:color-mix(in srgb, var(--accent) 5%, transparent); }
+    .name { font-weight:600; }
+    .url { color:var(--muted); font-size:13px; word-break:break-all; }
+    .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; }
+    .badge.up { color:var(--up); background:var(--up-bg); }
+    .badge.down { color:var(--down); background:var(--down-bg); }
+    .badge.pending { color:var(--pending); background:var(--pending-bg); }
+    .badge.paused { color:var(--paused); background:var(--paused-bg); }
+    .uptime { min-width:140px; }
+    .uptime .pct { font-weight:600; }
+    .bar { height:6px; background:var(--line); border-radius:999px; margin-top:6px; overflow:hidden; }
+    .bar span { display:block; height:100%; border-radius:999px; background:var(--muted); }
+    .bar.good span { background:var(--up); }
+    .bar.warn span { background:var(--pending); }
+    .bar.bad span { background:var(--down); }
+    .num { font-variant-numeric:tabular-nums; }
+    footer { margin-top:28px; color:var(--muted); font-size:12px; text-align:center; }
+    @media (max-width:720px) {
+      th { display:none; }
+      table, tbody, tr, td { display:block; width:100%; }
+      tr { padding:12px 16px; border-bottom:1px solid var(--line); }
+      tbody tr:last-child { border-bottom:none; }
+      td { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:5px 0; border:0; text-align:right; }
+      td::before { content:attr(data-label); color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; text-align:left; flex:none; }
+      td.uptime { display:block; min-width:0; text-align:left; }
+      td.uptime::before { display:block; margin-bottom:4px; }
+    }
   </style>
 </head>
 <body>
 <main>
-  <h1>Vigil</h1>
-  <p class="sub">Uptime and incident monitor. Page refreshes every 30 seconds.</p>
+  {% macro uptime_class(p) %}{% if p is none %}idle{% elif p >= 99 %}good{% elif p >= 95 %}warn{% else %}bad{% endif %}{% endmacro %}
+  {% set ns = namespace(up=0, down=0, pending=0, paused=0, uptime_sum=0, uptime_n=0) %}
+  {% for s in stats %}
+    {% if s.status == "up" %}{% set ns.up = ns.up + 1 %}
+    {% elif s.status == "down" %}{% set ns.down = ns.down + 1 %}
+    {% elif s.status == "paused" %}{% set ns.paused = ns.paused + 1 %}
+    {% else %}{% set ns.pending = ns.pending + 1 %}
+    {% endif %}
+    {% if s.uptime_pct is not none %}
+      {% set ns.uptime_sum = ns.uptime_sum + s.uptime_pct %}
+      {% set ns.uptime_n = ns.uptime_n + 1 %}
+    {% endif %}
+  {% endfor %}
 
-  <nav>
-    {% for w in ["1h", "24h", "7d", "30d"] %}
-      <a href="/?window={{ w }}" class="{{ 'active' if w == window else '' }}">{{ w }}</a>
-    {% endfor %}
-  </nav>
+  <header>
+    <h1>Vigil</h1>
+    <p class="sub">Uptime and incident monitor. Refreshes every 30 seconds.</p>
+  </header>
 
-  <h2 style="font-size:16px">Open incidents</h2>
-  <div class="card">
+  {% if not stats %}
+    <div class="banner idle"><span class="dot"></span>No monitors yet</div>
+  {% elif open_incidents or ns.down > 0 %}
+    <div class="banner bad"><span class="dot"></span>
+      {{ open_incidents|length }} open incident{{ "" if open_incidents|length == 1 else "s" }}, {{ ns.down }} monitor{{ "" if ns.down == 1 else "s" }} down
+    </div>
+  {% else %}
+    <div class="banner ok"><span class="dot"></span>All monitored systems are operational</div>
+  {% endif %}
+
+  <div class="tiles">
+    <div class="tile"><div class="label">Monitors</div><div class="value">{{ stats|length }}</div></div>
+    <div class="tile"><div class="label">Up</div><div class="value up">{{ ns.up }}</div></div>
+    <div class="tile"><div class="label">Down</div><div class="value {{ 'down' if ns.down else '' }}">{{ ns.down }}</div></div>
+    <div class="tile"><div class="label">Open incidents</div><div class="value {{ 'down' if open_incidents else '' }}">{{ open_incidents|length }}</div></div>
+    <div class="tile"><div class="label">Avg uptime ({{ window }})</div>
+      <div class="value">{{ "%.2f"|format(ns.uptime_sum / ns.uptime_n) ~ "%" if ns.uptime_n else "-" }}</div></div>
+  </div>
+
+  <h2>Open incidents</h2>
+  <div class="card {{ 'incident' if open_incidents else '' }}">
     {% if open_incidents %}
       <table>
-        <tr><th>Monitor</th><th>Since</th><th>Last error</th></tr>
+        <thead><tr><th>Monitor</th><th>Since</th><th>Last error</th></tr></thead>
+        <tbody>
         {% for incident, name in open_incidents %}
           <tr>
-            <td>{{ name }}</td>
-            <td>{{ incident.started_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
-            <td>{{ incident.last_error or "unknown" }}</td>
+            <td data-label="Monitor" class="name">{{ name }}</td>
+            <td data-label="Since" class="num">{{ incident.started_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+            <td data-label="Last error">{{ incident.last_error or "unknown" }}</td>
           </tr>
         {% endfor %}
+        </tbody>
       </table>
     {% else %}
-      <span class="sub">No open incidents.</span>
+      <div class="empty">No open incidents.</div>
     {% endif %}
   </div>
 
-  <h2 style="font-size:16px">Monitors ({{ window }})</h2>
+  <h2 style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;">
+    <span>Monitors</span>
+    <nav>
+      {% for w in ["1h", "24h", "7d", "30d"] %}
+        <a href="/?window={{ w }}" class="{{ 'active' if w == window else '' }}">{{ w }}</a>
+      {% endfor %}
+    </nav>
+  </h2>
   <div class="card">
     {% if stats %}
       <table>
-        <tr><th>Status</th><th>Monitor</th><th>Uptime</th><th>Avg ms</th><th>p95 ms</th><th>Checks</th><th>Last check</th></tr>
+        <thead>
+          <tr><th>Status</th><th>Monitor</th><th>Uptime</th><th>Avg ms</th><th>p95 ms</th><th>Checks</th><th>Last check</th></tr>
+        </thead>
+        <tbody>
         {% for s in stats %}
           <tr>
-            <td><span class="badge {{ s.status }}">{{ s.status }}</span></td>
-            <td>{{ s.name }}<br><span class="url">{{ s.url }}</span></td>
-            <td>{{ "%.2f"|format(s.uptime_pct) ~ "%" if s.uptime_pct is not none else "-" }}</td>
-            <td>{{ "%d"|format(s.avg_ms) if s.avg_ms is not none else "-" }}</td>
-            <td>{{ "%d"|format(s.p95_ms) if s.p95_ms is not none else "-" }}</td>
-            <td>{{ s.total_checks }}</td>
-            <td>{{ s.last_checked_at.strftime("%H:%M:%S UTC") if s.last_checked_at else "-" }}</td>
+            <td data-label="Status"><span class="badge {{ s.status }}">{{ s.status }}</span></td>
+            <td data-label="Monitor"><div class="name">{{ s.name }}</div><div class="url">{{ s.url }}</div></td>
+            <td data-label="Uptime" class="uptime">
+              <div class="pct num">{{ "%.2f"|format(s.uptime_pct) ~ "%" if s.uptime_pct is not none else "-" }}</div>
+              {% if s.uptime_pct is not none %}
+                <div class="bar {{ uptime_class(s.uptime_pct)|trim }}"><span style="width:{{ '%.2f'|format(s.uptime_pct) }}%"></span></div>
+              {% endif %}
+            </td>
+            <td data-label="Avg ms" class="num">{{ "%d"|format(s.avg_ms) if s.avg_ms is not none else "-" }}</td>
+            <td data-label="p95 ms" class="num">{{ "%d"|format(s.p95_ms) if s.p95_ms is not none else "-" }}</td>
+            <td data-label="Checks" class="num">{{ s.total_checks }}</td>
+            <td data-label="Last check" class="num">{{ s.last_checked_at.strftime("%H:%M:%S UTC") if s.last_checked_at else "-" }}</td>
           </tr>
         {% endfor %}
+        </tbody>
       </table>
     {% else %}
-      <span class="sub">No monitors yet. Create one with POST /monitors (see the README).</span>
+      <div class="empty">No monitors yet. Create one with POST /monitors (see the README).</div>
     {% endif %}
   </div>
+
+  <footer>Vigil, self-hosted uptime and incident monitor</footer>
 </main>
 </body>
 </html>
