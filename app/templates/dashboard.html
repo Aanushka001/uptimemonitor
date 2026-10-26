@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="30">
+  <title>Vigil status</title>
+  <style>
+    :root { --bg:#f7f7f5; --card:#fff; --text:#1f2933; --muted:#667085; --line:#e4e7ec;
+            --up:#1a7f4b; --down:#b42318; --pending:#8a6d00; --paused:#667085; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#16181d; --card:#1f232a; --text:#e8eaed; --muted:#9aa3af; --line:#2f353f;
+              --up:#4cc38a; --down:#f97066; --pending:#e5c158; --paused:#9aa3af; }
+    }
+    body { margin:0; padding:24px; background:var(--bg); color:var(--text);
+           font:15px/1.5 system-ui, sans-serif; }
+    main { max-width:960px; margin:0 auto; }
+    h1 { font-size:22px; margin:0 0 4px; }
+    .sub { color:var(--muted); margin:0 0 20px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
+            padding:16px; margin-bottom:20px; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    th { color:var(--muted); font-weight:500; font-size:13px; }
+    tr:last-child td { border-bottom:none; }
+    .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px;
+             font-weight:500; border:1px solid currentColor; }
+    .up { color:var(--up); } .down { color:var(--down); }
+    .pending { color:var(--pending); } .paused { color:var(--paused); }
+    .url { color:var(--muted); font-size:13px; }
+    nav a { color:var(--muted); margin-right:12px; text-decoration:none; }
+    nav a.active { color:var(--text); font-weight:500; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Vigil</h1>
+  <p class="sub">Uptime and incident monitor. Page refreshes every 30 seconds.</p>
+
+  <nav>
+    {% for w in ["1h", "24h", "7d", "30d"] %}
+      <a href="/?window={{ w }}" class="{{ 'active' if w == window else '' }}">{{ w }}</a>
+    {% endfor %}
+  </nav>
+
+  <h2 style="font-size:16px">Open incidents</h2>
+  <div class="card">
+    {% if open_incidents %}
+      <table>
+        <tr><th>Monitor</th><th>Since</th><th>Last error</th></tr>
+        {% for incident, name in open_incidents %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ incident.started_at.strftime("%Y-%m-%d %H:%M:%S UTC") }}</td>
+            <td>{{ incident.last_error or "unknown" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <span class="sub">No open incidents.</span>
+    {% endif %}
+  </div>
+
+  <h2 style="font-size:16px">Monitors ({{ window }})</h2>
+  <div class="card">
+    {% if stats %}
+      <table>
+        <tr><th>Status</th><th>Monitor</th><th>Uptime</th><th>Avg ms</th><th>p95 ms</th><th>Checks</th><th>Last check</th></tr>
+        {% for s in stats %}
+          <tr>
+            <td><span class="badge {{ s.status }}">{{ s.status }}</span></td>
+            <td>{{ s.name }}<br><span class="url">{{ s.url }}</span></td>
+            <td>{{ "%.2f"|format(s.uptime_pct) ~ "%" if s.uptime_pct is not none else "-" }}</td>
+            <td>{{ "%d"|format(s.avg_ms) if s.avg_ms is not none else "-" }}</td>
+            <td>{{ "%d"|format(s.p95_ms) if s.p95_ms is not none else "-" }}</td>
+            <td>{{ s.total_checks }}</td>
+            <td>{{ s.last_checked_at.strftime("%H:%M:%S UTC") if s.last_checked_at else "-" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <span class="sub">No monitors yet. Create one with POST /monitors (see the README).</span>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,43 @@
+x-app-env: &app-env
+  DATABASE_URL: postgresql+psycopg://vigil:${POSTGRES_PASSWORD:-vigil}@db:5432/vigil
+  API_KEY: ${API_KEY:-change-me-api-key}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  ALLOW_PRIVATE_TARGETS: ${ALLOW_PRIVATE_TARGETS:-false}
+  ENABLE_DEMO_ENDPOINTS: ${ENABLE_DEMO_ENDPOINTS:-false}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: vigil
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vigil}
+      POSTGRES_DB: vigil
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vigil -d vigil"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.worker"]
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
