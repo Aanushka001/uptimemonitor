@@ -48,3 +48,5 @@ CREATE INDEX IF NOT EXISTS idx_checks_monitor_time
 -- At most one open incident per monitor, enforced by the database itself.
 CREATE UNIQUE INDEX IF NOT EXISTS one_open_incident_per_monitor
     ON incidents (monitor_id) WHERE resolved_at IS NULL;
+
+ALTER TABLE monitors ADD COLUMN IF NOT EXISTS claimed_until TIMESTAMPTZ;
