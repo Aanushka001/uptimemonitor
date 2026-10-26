@@ -1,5 +1,8 @@
 # Vigil
+![Vigil dashboard](docs/screenshots/dashboard.png)
 
+**Demo recording:** [Watch the demo](docs/demo/vigil-demo.mp4)
+starting, a URL being monitored, the dashboard opening, and checks and incidents appearing.
 **A self-hosted uptime and incident monitor.** Vigil checks websites and APIs on a schedule, stores every result in PostgreSQL, opens an incident after repeated failures, and sends Telegram alerts when a target goes down and when it recovers.
 
 [![CI](https://github.com/Aanushka001/vigil-uptime-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/Aanushka001/vigil-uptime-monitor/actions/workflows/ci.yml)
