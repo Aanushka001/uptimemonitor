@@ -5,6 +5,7 @@ x-app-env: &app-env
   TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
   ALLOW_PRIVATE_TARGETS: ${ALLOW_PRIVATE_TARGETS:-false}
   ENABLE_DEMO_ENDPOINTS: ${ENABLE_DEMO_ENDPOINTS:-false}
+  WORKER_CLAIM_SECONDS: ${WORKER_CLAIM_SECONDS:-120}
 
 services:
   db:
@@ -15,12 +16,20 @@ services:
       POSTGRES_DB: vigil
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vigil -d vigil"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  migrate:
+    build: .
+    command: ["python", "-m", "app.migrate"]
+    environment: *app-env
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
 
   api:
     build: .
@@ -28,16 +37,18 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker:
     build: .
     command: ["python", "-m", "app.worker"]
     environment: *app-env
+    deploy:
+      replicas: ${WORKER_REPLICAS:-2}
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:
