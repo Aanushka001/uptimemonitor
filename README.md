@@ -6,9 +6,9 @@ Vigil periodically checks websites and APIs, stores check results in PostgreSQL,
 
 The project includes a responsive dashboard, a REST API, versioned SQL migrations, and multiple workers that coordinate through database leases to avoid checking the same monitor concurrently.
 
-![Vigil dashboard showing monitored websites, status indicators, uptime statistics, and incidents](docs/screenshots/dashboard.png)
+![ dashboard showing monitored websites, status indicators, uptime statistics, and incidents](docs/screenshots/dashboard.png)
 
-**Demo recording:** [Watch the Vigil demo (MP4)](docs/demo/vigil-demo.mp4)
+**Demo recording:** [Watch the  demo (MP4)](docs/demo/vigil-demo.mp4)
 
 The demo recording shows the application starting, a URL being monitored, the dashboard displaying monitor status, and checks and incidents appearing.
 
