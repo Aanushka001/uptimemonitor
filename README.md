@@ -1,4 +1,4 @@
-# Vigil
+# Uptime Monitor
 
 **A self-hosted uptime and incident monitoring system built with FastAPI and PostgreSQL.**
 
